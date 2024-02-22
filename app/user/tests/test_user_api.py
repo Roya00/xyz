@@ -7,7 +7,7 @@ from django.test import TestCase
 from django.urls import reverse
 from rest_framework import status
 
-CREATE_USER_URL = reverse('user:create')
+CREATE_USER_URL = reverse('user:create') # user as an app and create as an endpoint
 TOKEN_URL = reverse('user:token')
 ME_URL = reverse('user:me')
 
@@ -15,7 +15,7 @@ def create_user(**params):
     """ Create and return a new user """
     return get_user_model().objects.create_user(**params)
 
-class PublicUserApiTests(TestCase):
+class PublicUserApiTests(TestCase): # Doesnt required authentatication like registration
     """Test the publicly features of user api"""
     def setUp(self):
         self.client = APIClient()
@@ -103,13 +103,13 @@ class PublicUserApiTests(TestCase):
         self.assertNotIn('token', res.data)
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
 
-    def test_retrieve_user_unauthorized(self):
+    def test_retrieve_user_unauthorized(self):  ## force login is required fornthe user in private user api test setup
         """Test authentication is required for users."""
         res = self.client.get(ME_URL)
-
         self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
 
-    class PrivateUserApiTests(TestCase):
+
+class PrivateUserApiTests(TestCase):
         """Test API requests that require authentication."""
 
         def setUp(self):

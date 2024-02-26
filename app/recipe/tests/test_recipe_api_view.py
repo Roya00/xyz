@@ -298,7 +298,9 @@ class PrivateRecipeApiTests(TestCase):
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
         recipes = Recipe.objects.filter(user=self.user)
         self.assertEqual(recipes.count(),1)
+
         recipe = recipes[0]
+        #print(recipe.ingredients.all())
         self.assertEqual(recipe.ingredients.count(),2)
         for ingredient in payload['ingredients']:
             exists = recipe.ingredients.filter(name=ingredient['name'],user=self.user).exists()
@@ -360,7 +362,13 @@ class PrivateRecipeApiTests(TestCase):
     def test_clear_recipe_ingredients(self):
         """Test clearing a recipes ingredients."""
         ingredient = Ingredient.objects.create(user=self.user, name='Garlic')
-        recipe = create_recipe(user=self.user)
+        #recipe = create_recipe(user=self.user)
+        recipe = Recipe.objects.create(user=self.user, title='sfws')
+
+        for field in recipe._meta.fields:
+            print(f"{field.name.capitalize()}: {getattr(recipe, field.name)}")
+
+
         recipe.ingredients.add(ingredient)
 
         payload = {'ingredients': []}

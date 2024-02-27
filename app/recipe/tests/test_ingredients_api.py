@@ -3,8 +3,10 @@ from rest_framework import status
 from django.test import TestCase
 from django.urls import reverse
 from rest_framework.test import APIClient
+from decimal import Decimal
 
-from core.models import Ingredient
+
+from core.models import Ingredient,Recipe
 
 from recipe.serializers import IngredientSerializer
 
@@ -74,3 +76,32 @@ class PrivateIngredientApiTest(TestCase):
         ingredient = Ingredient.objects.filter(user=self.user)
         self.assertEqual(ingredient.count(), 0)
         self.assertEqual(ingredient.exists(), False)
+
+    def test_filter_ingredients_assigned_to_recipes(self):
+        in1 = Ingredient.objects.create(user=self.user, name='Apple')
+        in2 = Ingredient.objects.create(user=self.user, name='Banana')
+
+        recipe = Recipe.objects.create(title='Cucumber', time_minutes=5, price=5.00,user=self.user)
+        recipe.ingredients.add(in1)
+
+        res = self.client.get(INGREDIENT_URL, {'assigned_only':1})
+
+        s1 = IngredientSerializer(in1)
+        s2 = IngredientSerializer(in2)
+
+        self.assertIn(s1.data, res.data)
+        self.assertNotIn(s2.data, res.data)
+
+
+    def test_filtered_ingredients_unique(self):
+        ing = Ingredient.objects.create(user=self.user, name='Apple')
+        Ingredient.objects.create(user=self.user, name='Banana')
+
+        recipe1 = Recipe.objects.create(title='Cucumber',time_minutes=6,price=5.00,user=self.user)
+        recipe2 = Recipe.objects.create(title='Herb egg',time_minutes=12,price=5.00,user=self.user)
+        recipe1.ingredients.add(ing)
+        recipe2.ingredients.add(ing)
+
+        res = self.client.get(INGREDIENT_URL, {'assigned_only':1})
+
+        self.assertEqual(len(res.data),1)
